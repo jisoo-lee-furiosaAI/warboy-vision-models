@@ -391,9 +391,13 @@ class OutputHandler:
                     grid_imgs.append(None)
                     continue
                 try:
-                    # obj detection, output = bboxed image
-                    output, fps, _ = result_mux.get()
-                    if output is not None:
+                    # obj detection, output = bboxed image (batch)
+                    outputs, fps, _ = result_mux.get()
+                    
+                    # Handle batch outputs
+                    if outputs is not None and len(outputs) > 0:
+                        # For stream handler, use the first image from the batch
+                        output = outputs[0] if isinstance(outputs, list) else outputs
                         output_img = self._put_fps_to_img(output, f"FPS: {fps:.1f}")
                         output_img = cv2.resize(
                             output_img, self.grid_shape, interpolation=cv2.INTER_NEAREST
@@ -441,14 +445,27 @@ class OutputHandler:
                     os.makedirs(f"./outputs/video{idx}")
 
                 try:
-                    # obj detection, output = bboxed image
-                    output, fps, _ = result_mux.get()
-                    if output is not None:
-                        output_img = cv2.resize(
-                            output, self.grid_shape, interpolation=cv2.INTER_NEAREST
-                        )
-                        cv2.imwrite(f"./outputs/video{idx}/{id_}.bmp", output_img)
+                    # obj detection, output = bboxed image (batch)
+                    outputs, fps, _ = result_mux.get()
+                    
+                    # Handle batch outputs
+                    if outputs is not None and len(outputs) > 0:
+                        for batch_idx, output in enumerate(outputs):
+                            file_id = (
+                                id_ * len(outputs) + batch_idx
+                                if len(outputs) > 1
+                                else id_
+                            )
+                            if output is not None:
+                                output_img = cv2.resize(
+                                    output, self.grid_shape, interpolation=cv2.INTER_NEAREST
+                                )
+                                cv2.imwrite(f"./outputs/video{idx}/{file_id}.bmp", output_img)
                         processed_any = True
+                    else:
+                        # Handle empty batch
+                        with open(f"./outputs/video{idx}/{id_}.bmp", "w") as f:
+                            pass  # Create empty file or handle as needed
                 except QueueClosedError:
                     closed_channels.add(idx)
                     end_channels += 1
@@ -528,33 +545,45 @@ class OutputHandler:
                     os.makedirs(f"./outputs/video{idx}")
 
                 try:
-                    # obj detection, output = prediction data
-                    prediction, fps, _ = result_mux.get()
+                    # obj detection, output = prediction data (now batch)
+                    predictions, fps, _ = result_mux.get()
 
-                    with open(f"./outputs/video{idx}/{id_}.txt", "w") as f:
-                        if prediction is None:
-                            f.write(f"num_objects: 0\n")
-                        else:
-                            # Write the number of objects detected
-                            num_objects = len(prediction)
-                            f.write(f"num_objects: {num_objects}\n")
-
-                            # Write each object's detection information
-                            for pred in prediction:
-                                mbox = [int(i) for i in pred[:4]]
-                                score = pred[4]
-                                class_id = int(pred[5])
-
-                                # Check if tracking ID exists
-                                if len(pred) > 6:
-                                    tracking_id = int(pred[-1])
-                                    f.write(
-                                        f"x1: {mbox[0]} y1: {mbox[1]} x2: {mbox[2]} y2: {mbox[3]} score: {score:.4f} class_id: {class_id} tracking_id: {tracking_id}\n"
-                                    )
+                    # Handle batch predictions
+                    if predictions is not None and len(predictions) > 0:
+                        for batch_idx, prediction in enumerate(predictions):
+                            file_id = (
+                                id_ * len(predictions) + batch_idx
+                                if len(predictions) > 1
+                                else id_
+                            )
+                            with open(f"./outputs/video{idx}/{file_id}.txt", "w") as f:
+                                if prediction is None:
+                                    f.write(f"num_objects: 0\n")
                                 else:
-                                    f.write(
-                                        f"x1: {mbox[0]} y1: {mbox[1]} x2: {mbox[2]} y2: {mbox[3]} score: {score:.4f} class_id: {class_id}\n"
-                                    )
+                                    # Write the number of objects detected
+                                    num_objects = len(prediction)
+                                    f.write(f"num_objects: {num_objects}\n")
+
+                                    # Write each object's detection information
+                                    for pred in prediction:
+                                        mbox = [int(i) for i in pred[:4]]
+                                        score = pred[4]
+                                        class_id = int(pred[5])
+
+                                        # Check if tracking ID exists
+                                        if len(pred) > 6:
+                                            tracking_id = int(pred[-1])
+                                            f.write(
+                                                f"x1: {mbox[0]} y1: {mbox[1]} x2: {mbox[2]} y2: {mbox[3]} score: {score:.4f} class_id: {class_id} tracking_id: {tracking_id}\n"
+                                            )
+                                        else:
+                                            f.write(
+                                                f"x1: {mbox[0]} y1: {mbox[1]} x2: {mbox[2]} y2: {mbox[3]} score: {score:.4f} class_id: {class_id}\n"
+                                            )
+                    else:
+                        # Handle empty batch
+                        with open(f"./outputs/video{idx}/{id_}.txt", "w") as f:
+                            f.write(f"num_objects: 0\n")
 
                     total_fps += fps
                     frame_count += 1
@@ -575,7 +604,8 @@ class OutputHandler:
                 break
 
             id_ += 1
-            print(f"{curr_fps/curr_frame:.2f}")
+            if curr_frame > 0:
+                print(f"{curr_fps/curr_frame:.2f}")
             curr_fps = 0
             curr_frame = 0
 

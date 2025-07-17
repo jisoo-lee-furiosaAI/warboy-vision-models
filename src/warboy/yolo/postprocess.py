@@ -75,21 +75,38 @@ class ObjDetPostprocess:
         self.class_names = class_names
 
     def __call__(
-        self, outputs: List[np.ndarray], contexts: Dict[str, float], img: np.ndarray
-    ) -> np.ndarray:
-        ## Consider batch 1
+        self,
+        outputs: List[np.ndarray],
+        contexts: List[Dict[str, float]],
+        imgs: List[np.ndarray],
+    ) -> List[np.ndarray]:
+        ## Consider dynamic batch size
+        batch_size = len(imgs)
+        if batch_size == 0:
+            return []
 
-        predictions = self.postprocess_func(outputs, contexts, img.shape[:2])
-        assert len(predictions) == 1, f"{len(predictions)}!=1"
+        assert len(contexts) == batch_size, f"{len(contexts)}!={batch_size}"
 
-        predictions = predictions[0]
-        num_prediction = predictions.shape[0]
+        results = []
+        for i in range(batch_size):
+            img_shape = imgs[i].shape[:2]
+            # 각 배치 아이템별로 개별 context와 img_shape 전달
+            predictions = self.postprocess_func(outputs, contexts[i], img_shape)
 
-        if num_prediction == 0:
-            return img.astype(np.uint8)
+            if len(predictions) > 0:
+                # predictions는 리스트이고, 첫 번째 요소가 실제 detection 결과
+                prediction = predictions[0] if len(predictions) > 0 else np.array([])
+                if len(prediction) > 0:
+                    bboxed_img = draw_bbox(
+                        imgs[i].astype(np.uint8), prediction, self.class_names
+                    )
+                    results.append(bboxed_img)
+                else:
+                    results.append(imgs[i].astype(np.uint8))
+            else:
+                results.append(imgs[i].astype(np.uint8))
 
-        bboxed_img = draw_bbox(img.astype(np.uint8), predictions, self.class_names)
-        return bboxed_img
+        return results
 
 
 class ObjDetPredProcess:
@@ -101,20 +118,35 @@ class ObjDetPredProcess:
         self.class_names = class_names
 
     def __call__(
-        self, outputs: List[np.ndarray], contexts: Dict[str, float], img: np.ndarray
-    ) -> np.ndarray:
-        ## Consider batch 1
+        self,
+        outputs: List[np.ndarray],
+        contexts: List[Dict[str, float]],
+        imgs: List[np.ndarray],
+    ) -> List[np.ndarray]:
+        ## Consider dynamic batch size
+        batch_size = len(imgs)
+        if batch_size == 0:
+            return []
 
-        predictions = self.postprocess_func(outputs, contexts, img.shape[:2])
-        assert len(predictions) == 1, f"{len(predictions)}!=1"
+        assert len(contexts) == batch_size, f"{len(contexts)}!={batch_size}"
 
-        predictions = predictions[0]
-        num_prediction = predictions.shape[0]
+        results = []
+        for i in range(batch_size):
+            img_shape = imgs[i].shape[:2]
+            # 각 배치 아이템별로 개별 context와 img_shape 전달
+            prediction = self.postprocess_func(outputs, contexts[i], img_shape)
 
-        if num_prediction == 0:
-            return None
+            if len(prediction) > 0:
+                # prediction은 리스트이고, 첫 번째 요소가 실제 detection 결과
+                pred_array = prediction[0] if len(prediction) > 0 else np.array([])
+                if len(pred_array) > 0:
+                    results.append(pred_array)
+                else:
+                    results.append(None)
+            else:
+                results.append(None)
 
-        return predictions
+        return results
 
 
 # Postprocess for Pose Estimation

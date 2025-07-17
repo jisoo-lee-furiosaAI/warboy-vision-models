@@ -3,6 +3,7 @@ import time
 from collections import defaultdict
 from typing import List
 
+import numpy as np
 from furiosa.runtime import create_queue
 from furiosa.server.model import FuriosaRTModel, FuriosaRTModelConfig
 
@@ -31,7 +32,7 @@ class WarboyApplication:
     ):
         self.config = {"model": model, "worker_num": worker_num, "npu_device": device}
         self.model = FuriosaRTModel(
-            FuriosaRTModelConfig(name="YOLO", batch_size=1, **self.config)
+            FuriosaRTModelConfig(name="YOLO", batch_size=8, **self.config)
         )
         self.stream_mux_list = stream_mux_list
         self.output_mux_list = output_mux_list
@@ -59,11 +60,18 @@ class WarboyApplication:
         while True:
             t1 = time.time()
             try:
-                input_, _ = stream_mux.get()
+                input_ = stream_mux.get()
             except QueueClosedError:
                 # print(f"Video-Channel - {video_channel} End!")
                 break
-            output = await self.model.predict(input_)
+
+            # numpy array인 경우 tensor로 변환
+            if isinstance(input_, np.ndarray):
+                import torch
+
+                input_ = torch.from_numpy(input_)
+
+            output = await self.model.predict([input_])
             output_mux.put(output)
 
         output_mux.put(StopSig)

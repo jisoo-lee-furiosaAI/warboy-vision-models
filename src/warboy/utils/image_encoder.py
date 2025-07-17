@@ -23,14 +23,23 @@ class ImageEncoder:
         curr_idx = 0
         num_comp = 0
         start_time = time.time()
+        total_frames_processed = 0
         while True:
             try:
-                frame, context, img_idx = self.frame_mux.get()
-                output = self.output_mux.get()
-                annotated_img = self.postprocessor(output, context, frame)
+                frames, context, img_idx = self.frame_mux.get()
+                outputs = self.output_mux.get()
+
+                # batched postprocessing
+                annotated_img = self.postprocessor(outputs, context, frames)
+
+                batch_size = 8
+                total_frames_processed += batch_size
+
                 elapsed_time = time.time() - start_time
                 if elapsed_time > 1.0:
-                    FPS = ((curr_idx - num_comp)) / elapsed_time
+                    FPS = (
+                        total_frames_processed - (num_comp * batch_size)
+                    ) / elapsed_time
                     start_time = time.time()
                     num_comp = curr_idx
 
@@ -42,6 +51,10 @@ class ImageEncoder:
                     self.result_mux.put(StopSig)
                 break
             except Exception as e:
+                import sys
+                import traceback
+
+                traceback.print_exc(file=sys.stdout)
                 print(f"Error ImageEncoder: {e}")
                 break
 
