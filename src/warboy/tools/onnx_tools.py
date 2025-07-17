@@ -2,6 +2,7 @@ import os
 from typing import Dict, List
 
 import cv2
+import numpy as np
 import onnx
 import torch
 from tqdm import tqdm
@@ -174,7 +175,7 @@ class OnnxTools:
         ):
             input_img = cv2.imread(calibration_data)
             input_, _ = preprocessor(input_img)
-            calibrator.collect_data([[input_]])
+            calibrator.collect_data([[np.expand_dims(input_, 0)]])
 
         if use_model_editor:
             editor = ModelEditor(onnx_model)

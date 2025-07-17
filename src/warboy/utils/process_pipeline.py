@@ -393,7 +393,7 @@ class OutputHandler:
                 try:
                     # obj detection, output = bboxed image (batch)
                     outputs, fps, _ = result_mux.get()
-                    
+
                     # Handle batch outputs
                     if outputs is not None and len(outputs) > 0:
                         # For stream handler, use the first image from the batch
@@ -447,7 +447,7 @@ class OutputHandler:
                 try:
                     # obj detection, output = bboxed image (batch)
                     outputs, fps, _ = result_mux.get()
-                    
+
                     # Handle batch outputs
                     if outputs is not None and len(outputs) > 0:
                         for batch_idx, output in enumerate(outputs):
@@ -458,9 +458,13 @@ class OutputHandler:
                             )
                             if output is not None:
                                 output_img = cv2.resize(
-                                    output, self.grid_shape, interpolation=cv2.INTER_NEAREST
+                                    output,
+                                    self.grid_shape,
+                                    interpolation=cv2.INTER_NEAREST,
                                 )
-                                cv2.imwrite(f"./outputs/video{idx}/{file_id}.bmp", output_img)
+                                cv2.imwrite(
+                                    f"./outputs/video{idx}/{file_id}.bmp", output_img
+                                )
                         processed_any = True
                     else:
                         # Handle empty batch

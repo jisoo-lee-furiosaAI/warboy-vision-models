@@ -32,13 +32,16 @@ class ImageEncoder:
                 # batched postprocessing
                 annotated_img = self.postprocessor(outputs, context, frames)
 
-                batch_size = 8
-                total_frames_processed += batch_size
+                # 실제 batch size 동적 계산
+                actual_batch_size = (
+                    len(annotated_img) if isinstance(annotated_img, list) else 1
+                )
+                total_frames_processed += actual_batch_size
 
                 elapsed_time = time.time() - start_time
                 if elapsed_time > 1.0:
                     FPS = (
-                        total_frames_processed - (num_comp * batch_size)
+                        total_frames_processed - (num_comp * actual_batch_size)
                     ) / elapsed_time
                     start_time = time.time()
                     num_comp = curr_idx

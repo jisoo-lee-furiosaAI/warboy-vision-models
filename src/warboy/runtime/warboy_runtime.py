@@ -32,7 +32,7 @@ class WarboyApplication:
     ):
         self.config = {"model": model, "worker_num": worker_num, "npu_device": device}
         self.model = FuriosaRTModel(
-            FuriosaRTModelConfig(name="YOLO", batch_size=8, **self.config)
+            FuriosaRTModelConfig(name="YOLO", batch_size=4, **self.config)
         )
         self.stream_mux_list = stream_mux_list
         self.output_mux_list = output_mux_list

@@ -45,9 +45,11 @@ class YoloPreProcessor:
         img = img.transpose([2, 0, 1])[::-1]  # HWC -> CHW
         preproc_params = {"ratio": ratio, "pad": (padw, padh)}
         if self.tensor_type == "uint8":
-            input_ = np.ascontiguousarray(np.expand_dims(img, 0), dtype=np.uint8)
+            # input_ = np.ascontiguousarray(np.expand_dims(img, 0), dtype=np.uint8)
+            input_ = np.ascontiguousarray(img, dtype=np.uint8)
         else:
-            input_ = (
-                np.ascontiguousarray(np.expand_dims(img, 0), dtype=np.float32) / 255.0
-            )
+            # input_ = (
+            #     np.ascontiguousarray(np.expand_dims(img, 0), dtype=np.float32) / 255.0
+            # )
+            input_ = input_ = np.ascontiguousarray(img, dtype=np.float32) / 255.0
         return input_, preproc_params

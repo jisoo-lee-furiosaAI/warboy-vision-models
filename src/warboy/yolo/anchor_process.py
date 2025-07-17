@@ -1,5 +1,5 @@
 import re
-from typing import List, Sequence, Tuple, Union
+from typing import Dict, List, Sequence, Tuple, Union
 
 import numpy as np
 import torch
@@ -80,25 +80,36 @@ class object_detection_anchor_decoder(anchor_decoder):
 
     def __call__(
         self,
-        model_outputs: List[np.ndarray],
-        contexts,
-        org_input_shape: Tuple[int, int],
-    ):
-        boxes_dec = self.box_decoder(model_outputs)
-        outputs = non_max_suppression(boxes_dec, self.iou_thres)
+        model_outputs: List[np.ndarray],  # List of [B, C, H, W] arrays
+        contexts: List[Dict[str, float]],
+        org_input_shapes: List[Tuple[int, int]],
+    ) -> List[np.ndarray]:
+
+        batch_size = model_outputs[0].shape[0]
+        assert len(contexts) == batch_size
+        assert len(org_input_shapes) == batch_size
+
+        # YOLOv8 decoder expects full batch
+        boxes_dec = self.box_decoder(model_outputs)  # returns list of B detections
+        assert len(boxes_dec) == batch_size
+
         predictions = []
 
-        ratio, dwdh = contexts["ratio"], contexts["pad"]
-        for _, prediction in enumerate(outputs):
+        for i in range(batch_size):
+            prediction = boxes_dec[i]
+            context_i = contexts[i]
+            org_shape_i = org_input_shapes[i]
+
             try:
                 prediction[:, :4] = scale_coords(
-                    prediction[:, :4], ratio, dwdh, org_input_shape
-                )  # Box Result
+                    prediction[:, :4], context_i["ratio"], context_i["pad"], org_shape_i
+                )
                 if self.tracker is not None:
                     prediction = self.tracker(prediction[:, :6])
                 predictions.append(prediction)
-            except Exception as e:
-                continue
+            except Exception:
+                predictions.append(None)
+
         return predictions
 
 

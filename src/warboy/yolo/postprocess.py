@@ -123,30 +123,18 @@ class ObjDetPredProcess:
         contexts: List[Dict[str, float]],
         imgs: List[np.ndarray],
     ) -> List[np.ndarray]:
-        ## Consider dynamic batch size
         batch_size = len(imgs)
         if batch_size == 0:
             return []
 
-        assert len(contexts) == batch_size, f"{len(contexts)}!={batch_size}"
+        assert (
+            outputs[0].shape[0] == batch_size
+        ), f"outputs batch {outputs[0].shape[0]} != imgs {batch_size}"
+        assert (
+            len(contexts) == batch_size
+        ), f"contexts {len(contexts)} != imgs {batch_size}"
 
-        results = []
-        for i in range(batch_size):
-            img_shape = imgs[i].shape[:2]
-            # 각 배치 아이템별로 개별 context와 img_shape 전달
-            prediction = self.postprocess_func(outputs, contexts[i], img_shape)
-
-            if len(prediction) > 0:
-                # prediction은 리스트이고, 첫 번째 요소가 실제 detection 결과
-                pred_array = prediction[0] if len(prediction) > 0 else np.array([])
-                if len(pred_array) > 0:
-                    results.append(pred_array)
-                else:
-                    results.append(None)
-            else:
-                results.append(None)
-
-        return results
+        return self.postprocess_func(outputs, contexts, [img.shape[:2] for img in imgs])
 
 
 # Postprocess for Pose Estimation
