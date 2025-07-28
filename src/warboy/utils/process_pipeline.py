@@ -245,6 +245,7 @@ class PipeLine:
                     device=runtime_info["device"],
                     stream_mux_list=self.stream_mux_list[name],
                     output_mux_list=self.output_mux_list[name],
+                    batch_size=self.batch_size,
                 )
                 for name, runtime_info in self.runtime_info.items()
             ]

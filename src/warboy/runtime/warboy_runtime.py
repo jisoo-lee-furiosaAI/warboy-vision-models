@@ -93,8 +93,14 @@ class WarboyQueueRuntime:
         device: str,
         stream_mux_list: List[PipeLineQueue],
         output_mux_list: List[PipeLineQueue],
+        batch_size: int,
     ):
-        self.config = {"model": model, "worker_num": worker_num, "device": device}
+        self.config = {
+            "model": model,
+            "worker_num": worker_num,
+            "device": device,
+            "batch_size": batch_size,
+        }
         self.submitter = None
         self.receiver = None
         self.stream_mux_list = stream_mux_list
@@ -105,6 +111,8 @@ class WarboyQueueRuntime:
 
         self.pending_lock = None
         self.done_event = None
+
+        self.channel_img_idx = defaultdict(lambda: 0)
 
         print("WarboyQueueRuntime - init")
 
@@ -126,10 +134,13 @@ class WarboyQueueRuntime:
 
         while True:
             try:
-                input_, img_idx = self.stream_mux_list[video_channel].get()
+                input_ = self.stream_mux_list[video_channel].get()
 
                 async with self.pending_lock:
                     self.pending_tasks += 1
+
+                img_idx = self.channel_img_idx[video_channel]
+                self.channel_img_idx[video_channel] += 1
 
                 await self.submitter.submit(input_, context=(video_channel, img_idx))
             except QueueClosedError:
