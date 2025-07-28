@@ -56,8 +56,9 @@ MODEL_LIST = {
         "yolov9e-seg",
     ],
 }
+from typing import Any, Dict
+
 import yaml
-from typing import Dict, Any
 
 
 def get_demo_params_from_cfg(cfg: str) -> Dict[str, Any]:
@@ -81,11 +82,16 @@ def get_demo_params_from_cfg(cfg: str) -> Dict[str, Any]:
             "model_param": [],
             "class_name": [],
             "input_shape": [],
+            "batch_size": [],
             "model_name": [],
         }
-        param["model_param"], param["model_name"], param["input_shape"], param[
-            "class_name"
-        ] = _get_model_params_from_cfg(app_config["model_cfg"][0])
+        (
+            param["model_param"],
+            param["model_name"],
+            param["input_shape"],
+            param["batch_size"],
+            param["class_name"],
+        ) = _get_model_params_from_cfg(app_config["model_cfg"][0])
 
         params.append(param)
 
@@ -111,8 +117,10 @@ def _get_model_params_from_cfg(cfg: str) -> Dict[str, Any]:
         },
         model_cfg["model_name"],
         model_cfg["input_shape"][2:],
+        model_cfg["input_shape"][0],
         model_cfg["class_names"],
     ]
+
     return param
 
 

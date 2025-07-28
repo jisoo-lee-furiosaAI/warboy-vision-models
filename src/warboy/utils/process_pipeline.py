@@ -60,6 +60,7 @@ class PipeLine:
     def __init__(
         self,
         num_channels: int,
+        batch_size: int,
         run_fast_api: bool = True,
         run_e2e_test: bool = False,
         make_image_output: bool = False,
@@ -89,6 +90,8 @@ class PipeLine:
         self.image_handler = OutputHandler(num_channels=num_channels)
 
         self.results = []
+
+        self.batch_size = batch_size
 
     def add(self, obj, name: str = "", postprocess_as_img=True):
         print(isinstance(obj, Engine))
@@ -157,6 +160,7 @@ class PipeLine:
                     frame_mux=new_frame_mux,
                     preprocess_function=self.preprocess_functions[name],
                     recursive=obj.recursive,
+                    batch_size=self.batch_size,
                 )
             )
             self.image_encoder_process.append(
@@ -229,6 +233,7 @@ class PipeLine:
                     device=runtime_info["device"],
                     stream_mux_list=self.stream_mux_list[name],
                     output_mux_list=self.output_mux_list[name],
+                    batch_size=self.batch_size,
                 )
                 for name, runtime_info in self.runtime_info.items()
             ]

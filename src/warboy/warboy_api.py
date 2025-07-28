@@ -23,17 +23,24 @@ class AppRunner:
 
     def __init__(self, params, demo_type) -> None:
         num_videos = sum(len(param["videos_info"]) for param in params)
+        batch_size = params[0]["batch_size"]
 
         # Warboy Runtime
         if demo_type == "web":
-            self.job_handler = PipeLine(num_channels=num_videos)
+            self.job_handler = PipeLine(num_channels=num_videos, batch_size=batch_size)
         elif demo_type == "image":
             self.job_handler = PipeLine(
-                num_channels=num_videos, run_fast_api=False, make_image_output=True
+                num_channels=num_videos,
+                run_fast_api=False,
+                batch_size=batch_size,
+                make_image_output=True,
             )
         elif demo_type == "file":
             self.job_handler = PipeLine(
-                num_channels=num_videos, run_fast_api=False, make_file_output=True
+                num_channels=num_videos,
+                run_fast_api=False,
+                batch_size=batch_size,
+                make_file_output=True,
             )
 
         engin_configs_dict = {}

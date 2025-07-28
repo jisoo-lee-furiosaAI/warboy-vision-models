@@ -29,10 +29,15 @@ class WarboyApplication:
         device: str,
         stream_mux_list: List[PipeLineQueue],
         output_mux_list: List[PipeLineQueue],
+        batch_size: int,
     ):
-        self.config = {"model": model, "worker_num": worker_num, "npu_device": device}
+        self.config = {
+            "model": model,
+            "worker_num": worker_num,
+            "npu_device": device,
+        }
         self.model = FuriosaRTModel(
-            FuriosaRTModelConfig(name="YOLO", batch_size=4, **self.config)
+            FuriosaRTModelConfig(name="YOLO", batch_size=batch_size, **self.config)
         )
         self.stream_mux_list = stream_mux_list
         self.output_mux_list = output_mux_list
@@ -65,7 +70,6 @@ class WarboyApplication:
                 # print(f"Video-Channel - {video_channel} End!")
                 break
 
-            # numpy array인 경우 tensor로 변환
             if isinstance(input_, np.ndarray):
                 import torch
 
