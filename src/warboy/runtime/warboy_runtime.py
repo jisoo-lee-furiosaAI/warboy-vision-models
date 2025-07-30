@@ -175,6 +175,9 @@ class WarboyQueueRuntime:
                 while expected_idx[video_channel] in buffer[video_channel]:
                     output = buffer[video_channel].pop(expected_idx[video_channel])
                     self.output_mux_list[video_channel].put(output)
+                    print(
+                        f"[output_mux] Current size: {self.output_mux_list[video_channel].qsize()}"
+                    )
                     expected_idx[video_channel] += 1
 
                 async with self.pending_lock:

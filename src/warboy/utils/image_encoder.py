@@ -83,6 +83,7 @@ class PredictionEncoder:
                 preds = self.postprocessor(output, context, frame.shape[:2])
                 if not self.result_mux is None:
                     self.result_mux.put((preds, 0.0, img_idx))
+                    print(f"[result_mux] Current size: {self.result_mux.qsize()}")
             except QueueClosedError:
                 if not self.result_mux is None:
                     self.result_mux.put(StopSig)

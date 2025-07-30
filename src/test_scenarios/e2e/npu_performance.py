@@ -15,15 +15,20 @@ def test_warboy_performance(cfg, num_device, trace_file_dir=TRACE_FILE_DIR):
 
     param = get_model_params_from_cfg(cfg)
     device = f"warboy({num_device})*1"
+    print(f"warboy({num_device})*1")
     from furiosa.runtime.profiler import profile
 
     input_shape = param["input_shape"]
+    print(f"Input shape: {input_shape}")
     trace_dir = os.path.join(trace_file_dir, param["task"])
 
     if not os.path.exists(trace_dir):
         os.makedirs(trace_dir)
 
-    trace_file = os.path.join(trace_dir, param["model_name"] + "_" + device + ".log")
+    trace_file = os.path.join(
+        trace_dir,
+        param["model_name"] + "_" + device + "_" + str(input_shape[0]) + ".log",
+    )
 
     onnx_i8_path = param["onnx_i8_path"]
 

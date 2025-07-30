@@ -224,7 +224,7 @@ class PipeLine:
         else:
             raise "Error: not implemented type"
 
-    def run(self, runtime_type: str = "application"):
+    def run(self, runtime_type: str = "queue"):
         if runtime_type == "application":
             runtime_process = [
                 WarboyApplication(
@@ -390,7 +390,7 @@ class OutputHandler:
         while True:
             grid_imgs = []
             total_fps = 0
-            processed_any = False
+            # processed_any = False
 
             for idx, result_mux in enumerate(result_mux_list):
                 if result_mux is None or idx in closed_channels:
@@ -410,7 +410,7 @@ class OutputHandler:
                         )
                         total_fps += fps
                         grid_imgs.append(output_img)
-                        processed_any = True
+                        # processed_any = True
                     else:
                         grid_imgs.append(None)
                 except QueueClosedError:

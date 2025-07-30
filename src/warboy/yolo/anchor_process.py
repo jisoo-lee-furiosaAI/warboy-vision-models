@@ -1,4 +1,5 @@
 import re
+import time
 from typing import Dict, List, Sequence, Tuple, Union
 
 import numpy as np
@@ -90,8 +91,10 @@ class object_detection_anchor_decoder(anchor_decoder):
         assert len(org_input_shapes) == batch_size
 
         # YOLOv8 decoder expects full batch
+        # start = time.time()
         boxes_dec = self.box_decoder(model_outputs)  # returns list of B detections
         assert len(boxes_dec) == batch_size
+        # print(f"[AnchorDecoder] Decoding time: {time.time() - start:.3f} sec")
 
         predictions = []
 

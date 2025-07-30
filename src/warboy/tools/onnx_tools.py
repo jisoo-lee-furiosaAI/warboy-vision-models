@@ -150,6 +150,7 @@ class OnnxTools:
         )
 
         new_shape = self.input_shape[2:]
+        batch_size = self.input_shape[0]
         onnx_model = onnx.load(self.onnx_path)
         onnx_model = optimize_model(
             model=onnx_model,
@@ -170,12 +171,22 @@ class OnnxTools:
                 f"Preprocessor for {self.task} >> {self.model_name} is not implemented yet!"
             )
 
+        batch_inputs = []
         for calibration_data in tqdm(
             self._get_calibration_dataset(), desc="calibration..."
         ):
             input_img = cv2.imread(calibration_data)
             input_, _ = preprocessor(input_img)
-            calibrator.collect_data([[np.expand_dims(input_, 0)]])
+            batch_inputs.append(input_)
+
+            if len(batch_inputs) == batch_size:
+                batch_inputs = np.stack(batch_inputs, axis=0)  # (B, C, H, W)
+                calibrator.collect_data([[batch_inputs]])
+                batch_inputs = []
+
+        if len(batch_inputs) == batch_size:
+            batch_inputs = np.stack(batch_inputs, axis=0)
+            calibrator.collect_data([[batch_inputs]])
 
         if use_model_editor:
             editor = ModelEditor(onnx_model)

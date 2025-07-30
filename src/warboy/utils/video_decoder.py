@@ -69,5 +69,6 @@ class VideoDecoder:
             return
         batched_array = np.stack(inputs, axis=0)
         self.stream_mux.put(batched_array)
+        print(f"[stream_mux] Current size: {self.stream_mux.qsize()}")
         self.frame_mux.put((frames[:], ctxs[:], idxs[:]))
         frames.clear(), inputs.clear(), ctxs.clear(), idxs.clear()
