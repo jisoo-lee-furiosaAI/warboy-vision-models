@@ -513,14 +513,15 @@ class OutputHandler:
         frame_count = 0
         closed_channels = set()
 
+        video_fps_sum = {}
+        video_frame_count = {}
+
         if not os.path.exists("./outputs"):
             os.makedirs("./outputs")
 
         while True:
             processed_any = False
             for idx, result_mux in enumerate(result_mux_list):
-                curr_fps = 0
-                curr_frame = 0
                 if result_mux is None or idx in closed_channels:
                     continue
 
@@ -556,11 +557,18 @@ class OutputHandler:
                                         f"x1: {mbox[0]} y1: {mbox[1]} x2: {mbox[2]} y2: {mbox[3]} score: {score:.4f} class_id: {class_id}\n"
                                     )
 
+                    if idx not in video_fps_sum:
+                        video_fps_sum[idx] = 0
+                        video_frame_count[idx] = 0
+                    video_fps_sum[idx] += fps
+                    video_frame_count[idx] += 1
+                    
+                    current_avg_fps = video_fps_sum[idx] / video_frame_count[idx]
+                    print(f"video{idx} fps: {current_avg_fps:.2f}")
+
                     total_fps += fps
                     frame_count += 1
                     processed_any = True
-                    curr_fps += fps
-                    curr_frame += 1
                 except QueueClosedError:
                     closed_channels.add(idx)
                     end_channels += 1
@@ -575,9 +583,6 @@ class OutputHandler:
                 break
 
             id_ += 1
-            print(f"{curr_fps/curr_frame:.2f}")
-            curr_fps = 0
-            curr_frame = 0
 
         # avg FPS calculation
         if frame_count > 0:
