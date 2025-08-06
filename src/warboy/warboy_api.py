@@ -23,7 +23,6 @@ class AppRunner:
 
     def __init__(self, params, demo_type) -> None:
         num_videos = sum(len(param["videos_info"]) for param in params)
-
         # Warboy Runtime
         if demo_type == "web":
             self.job_handler = PipeLine(num_channels=num_videos)
@@ -33,7 +32,12 @@ class AppRunner:
             )
         elif demo_type == "file":
             self.job_handler = PipeLine(
-                num_channels=num_videos, run_fast_api=False, make_file_output=True
+                num_channels=num_videos,
+                run_fast_api=False,
+                make_file_output=True,
+                skip_frames=(
+                    params[0]["skip_frames"] if "skip_frames" in params[0] else 1
+                ),
             )
 
         engin_configs_dict = {}

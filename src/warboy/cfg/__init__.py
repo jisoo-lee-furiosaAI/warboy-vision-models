@@ -56,8 +56,9 @@ MODEL_LIST = {
         "yolov9e-seg",
     ],
 }
+from typing import Any, Dict
+
 import yaml
-from typing import Dict, Any
 
 
 def get_demo_params_from_cfg(cfg: str) -> Dict[str, Any]:
@@ -76,6 +77,7 @@ def get_demo_params_from_cfg(cfg: str) -> Dict[str, Any]:
             "task": app_config["task"][0],
             "model_path": app_config["model_path"][0],
             "worker_num": int(app_config["num_worker"]),
+            "skip_frames": int(app_config["skip_frames"]),
             "warboy_device": app_config["npu_device"][0],
             "videos_info": app_config["video_params"],
             "model_param": [],
@@ -83,9 +85,12 @@ def get_demo_params_from_cfg(cfg: str) -> Dict[str, Any]:
             "input_shape": [],
             "model_name": [],
         }
-        param["model_param"], param["model_name"], param["input_shape"], param[
-            "class_name"
-        ] = _get_model_params_from_cfg(app_config["model_cfg"][0])
+        (
+            param["model_param"],
+            param["model_name"],
+            param["input_shape"],
+            param["class_name"],
+        ) = _get_model_params_from_cfg(app_config["model_cfg"][0])
 
         params.append(param)
 

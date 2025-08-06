@@ -11,12 +11,13 @@ class ImageEncoder:
         output_mux: PipeLineQueue,
         result_mux: PipeLineQueue,
         postprocess_function: Callable,
+        skip_frames: int = 1,
     ):
         self.frame_mux = frame_mux
         self.output_mux = output_mux
         self.result_mux = result_mux
         self.postprocessor = postprocess_function
-        pass
+        self.skip_frames = skip_frames
 
     def run(self):
         FPS = 0.0
@@ -30,7 +31,7 @@ class ImageEncoder:
                 annotated_img = self.postprocessor(output, context, frame)
                 elapsed_time = time.time() - start_time
                 if elapsed_time > 1.0:
-                    FPS = ((curr_idx - num_comp)) / elapsed_time
+                    FPS = (((curr_idx - num_comp)) / elapsed_time) * self.skip_frames
                     start_time = time.time()
                     num_comp = curr_idx
 

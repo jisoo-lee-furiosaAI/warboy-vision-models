@@ -64,6 +64,7 @@ class PipeLine:
         run_e2e_test: bool = False,
         make_image_output: bool = False,
         make_file_output: bool = False,
+        skip_frames: int = 1,
     ):
         self.run_fast_api = run_fast_api
         self.run_e2e_test = run_e2e_test
@@ -89,6 +90,8 @@ class PipeLine:
         self.image_handler = OutputHandler(num_channels=num_channels)
 
         self.results = []
+
+        self.skip_frames = skip_frames
 
     def add(self, obj, name: str = "", postprocess_as_img=True):
         print(isinstance(obj, Engine))
@@ -157,6 +160,7 @@ class PipeLine:
                     frame_mux=new_frame_mux,
                     preprocess_function=self.preprocess_functions[name],
                     recursive=obj.recursive,
+                    skip_frames=self.skip_frames if hasattr(self, 'skip_frames') else 1,  # Use skip_frames if set, otherwise default to 1
                 )
             )
             self.image_encoder_process.append(
@@ -165,6 +169,7 @@ class PipeLine:
                     output_mux=new_output_mux,
                     result_mux=new_result_mux,
                     postprocess_function=self.postprocess_functions[name],
+                    skip_frames=self.skip_frames if hasattr(self, 'skip_frames') else 1,  # Use skip_frames if set, otherwise default to 1
                 )
             )
         elif isinstance(obj, ImageList):
@@ -206,6 +211,7 @@ class PipeLine:
                         output_mux=new_output_mux,
                         result_mux=new_result_mux,
                         postprocess_function=self.postprocess_functions[name],
+                        skip_frames=self.skip_frames if hasattr(self, 'skip_frames') else 1,  # Use skip_frames if set, otherwise default to 1
                     )
                 )
             else:

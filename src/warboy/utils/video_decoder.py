@@ -14,6 +14,7 @@ class VideoDecoder:
         frame_mux: PipeLineQueue,
         preprocess_function: Callable = YoloPreProcessor(),
         recursive: bool = False,
+        skip_frames: int = 1,
     ):
         self.video_path = video_path
         self.reader = None
@@ -21,6 +22,7 @@ class VideoDecoder:
         self.preprocessor = preprocess_function
         self.stream_mux = stream_mux
         self.frame_mux = frame_mux
+        self.skip_frames = skip_frames
 
     def run(self):
         img_idx = 0
@@ -35,10 +37,10 @@ class VideoDecoder:
                     else:
                         self.reader.release()
                         break
-
-                input_, context = self.preprocessor(frame)
-                self.stream_mux.put((input_, img_idx))
-                self.frame_mux.put((frame, context, img_idx))
+                if img_idx % self.skip_frames == 0:
+                    input_, context = self.preprocessor(frame)
+                    self.stream_mux.put((input_, img_idx))
+                    self.frame_mux.put((frame, context, img_idx))
                 img_idx += 1
 
             except Exception as e:
