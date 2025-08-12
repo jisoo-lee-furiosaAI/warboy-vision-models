@@ -473,7 +473,8 @@ class OutputHandler:
                         video_frame_count[idx] += 1
 
                         current_avg_fps = video_fps_sum[idx] / video_frame_count[idx]
-                        print(f"video{idx} fps: {current_avg_fps:.2f}")
+                        print(f"video{idx} curr fps: {fps:.2f}")
+                        print(f"video{idx} avg fps: {current_avg_fps:.2f}")
 
                         total_fps += fps
                         frame_count += 1
@@ -492,13 +493,6 @@ class OutputHandler:
                 break
 
             id_ += 1
-
-        # avg FPS calculation
-        if frame_count > 0:
-            avg_fps = total_fps / frame_count
-            print(f"Average FPS: {avg_fps:.2f}")
-        else:
-            print("No frames processed")
 
     def output_e2e_test_handler(
         self,
@@ -600,7 +594,8 @@ class OutputHandler:
                     video_frame_count[idx] += 1
 
                     current_avg_fps = video_fps_sum[idx] / video_frame_count[idx]
-                    print(f"video{idx} fps: {current_avg_fps:.2f}")
+                    print(f"video{idx} curr fps: {fps:.2f}")
+                    print(f"video{idx} avg fps: {current_avg_fps:.2f}")
 
                     total_fps += fps
                     frame_count += 1
@@ -619,10 +614,3 @@ class OutputHandler:
                 break
 
             id_ += 1
-
-        # avg FPS calculation
-        if frame_count > 0:
-            avg_fps = total_fps / frame_count
-            print(f"Average FPS: {avg_fps:.2f}")
-        else:
-            print("No frames processed")
