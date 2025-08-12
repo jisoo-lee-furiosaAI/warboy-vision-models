@@ -160,7 +160,9 @@ class PipeLine:
                     frame_mux=new_frame_mux,
                     preprocess_function=self.preprocess_functions[name],
                     recursive=obj.recursive,
-                    skip_frames=self.skip_frames if hasattr(self, 'skip_frames') else 1,  # Use skip_frames if set, otherwise default to 1
+                    skip_frames=(
+                        self.skip_frames if hasattr(self, "skip_frames") else 1
+                    ),  # Use skip_frames if set, otherwise default to 1
                 )
             )
             self.image_encoder_process.append(
@@ -169,7 +171,9 @@ class PipeLine:
                     output_mux=new_output_mux,
                     result_mux=new_result_mux,
                     postprocess_function=self.postprocess_functions[name],
-                    skip_frames=self.skip_frames if hasattr(self, 'skip_frames') else 1,  # Use skip_frames if set, otherwise default to 1
+                    skip_frames=(
+                        self.skip_frames if hasattr(self, "skip_frames") else 1
+                    ),  # Use skip_frames if set, otherwise default to 1
                 )
             )
         elif isinstance(obj, ImageList):
@@ -211,7 +215,9 @@ class PipeLine:
                         output_mux=new_output_mux,
                         result_mux=new_result_mux,
                         postprocess_function=self.postprocess_functions[name],
-                        skip_frames=self.skip_frames if hasattr(self, 'skip_frames') else 1,  # Use skip_frames if set, otherwise default to 1
+                        skip_frames=(
+                            self.skip_frames if hasattr(self, "skip_frames") else 1
+                        ),  # Use skip_frames if set, otherwise default to 1
                     )
                 )
             else:
@@ -433,6 +439,11 @@ class OutputHandler:
         end_channels = 0
         id_ = 0
         closed_channels = set()
+        # 각 영상별 fps 합계와 프레임 수를 추적
+        video_fps_sum = {}
+        video_frame_count = {}
+        total_fps = 0
+        frame_count = 0
 
         if not os.path.exists("./outputs"):
             os.makedirs("./outputs")
@@ -454,6 +465,18 @@ class OutputHandler:
                             output, self.grid_shape, interpolation=cv2.INTER_NEAREST
                         )
                         cv2.imwrite(f"./outputs/video{idx}/{id_}.bmp", output_img)
+
+                        if idx not in video_fps_sum:
+                            video_fps_sum[idx] = 0
+                            video_frame_count[idx] = 0
+                        video_fps_sum[idx] += fps
+                        video_frame_count[idx] += 1
+
+                        current_avg_fps = video_fps_sum[idx] / video_frame_count[idx]
+                        print(f"video{idx} fps: {current_avg_fps:.2f}")
+
+                        total_fps += fps
+                        frame_count += 1
                         processed_any = True
                 except QueueClosedError:
                     closed_channels.add(idx)
@@ -469,6 +492,13 @@ class OutputHandler:
                 break
 
             id_ += 1
+
+        # avg FPS calculation
+        if frame_count > 0:
+            avg_fps = total_fps / frame_count
+            print(f"Average FPS: {avg_fps:.2f}")
+        else:
+            print("No frames processed")
 
     def output_e2e_test_handler(
         self,
@@ -568,7 +598,7 @@ class OutputHandler:
                         video_frame_count[idx] = 0
                     video_fps_sum[idx] += fps
                     video_frame_count[idx] += 1
-                    
+
                     current_avg_fps = video_fps_sum[idx] / video_frame_count[idx]
                     print(f"video{idx} fps: {current_avg_fps:.2f}")
 

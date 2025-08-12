@@ -25,10 +25,20 @@ class AppRunner:
         num_videos = sum(len(param["videos_info"]) for param in params)
         # Warboy Runtime
         if demo_type == "web":
-            self.job_handler = PipeLine(num_channels=num_videos)
+            self.job_handler = PipeLine(
+                num_channels=num_videos,
+                skip_frames=(
+                    params[0]["skip_frames"] if "skip_frames" in params[0] else 1
+                ),
+            )
         elif demo_type == "image":
             self.job_handler = PipeLine(
-                num_channels=num_videos, run_fast_api=False, make_image_output=True
+                num_channels=num_videos,
+                run_fast_api=False,
+                make_image_output=True,
+                skip_frames=(
+                    params[0]["skip_frames"] if "skip_frames" in params[0] else 1
+                ),
             )
         elif demo_type == "file":
             self.job_handler = PipeLine(
