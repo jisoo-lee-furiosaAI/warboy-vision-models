@@ -26,7 +26,23 @@ class VideoDecoder:
 
     def run(self):
         img_idx = 0
-        self.reader = cv2.VideoCapture(self.video_path, cv2.CAP_FFMPEG)
+        if "v4l2src" in self.video_path:
+            self.reader = cv2.VideoCapture(self.video_path, cv2.CAP_GSTREAMER)
+            if not self.reader.isOpened():
+                import re
+
+                print("GStreamer pipeline failed, trying direct access...")
+
+                match = re.search(r"device=/dev/video(\d+)", self.video_path)
+                if match:
+                    device_number = int(match.group(1))
+                    print(f"Fallback to device {device_number}")
+                    self.reader = cv2.VideoCapture(device_number)
+                else:
+                    print("Could not extract device number, using default 0")
+                    self.reader = cv2.VideoCapture(0)
+        else:
+            self.reader = cv2.VideoCapture(self.video_path, cv2.CAP_FFMPEG)
         while True:
             try:
                 hasFrame, frame = self.reader.read()
